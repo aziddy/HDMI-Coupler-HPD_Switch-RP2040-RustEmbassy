@@ -58,13 +58,51 @@ DEFMT_LOG = "info"
 
 ## Step 2: Programming via USB (UF2 Method)
 
-### Method A: Using `cargo run` (Automatic)
+### Method A: Using `cargo make` (Recommended)
 
-1. **Enter bootloader mode:**
+1. **Build the UF2 file:**
+   ```bash
+   # Release build (optimized)
+   cargo make uf2 --release
+
+   # Debug build (faster compilation, larger binary)
+   cargo make uf2
+   ```
+
+   This will create `target/hdmi-hpd-control.uf2`
+
+2. **Enter bootloader mode:**
    - Hold down the BOOTSEL button on your RP2040 board
    - While holding BOOTSEL, connect the USB cable to your computer
    - Release BOOTSEL
    - The board should appear as a USB mass storage device named "RPI-RP2"
+
+3. **Copy the UF2 file:**
+   ```bash
+   # macOS
+   cp target/hdmi-hpd-control.uf2 /Volumes/RPI-RP2/
+
+   # Linux
+   cp target/hdmi-hpd-control.uf2 /media/$USER/RPI-RP2/
+
+   # Or just drag and drop the file to the RPI-RP2 drive
+   ```
+
+4. The device will automatically reset and run your firmware
+
+### Method B: Using `cargo make uf2-flash` (Auto-copy)
+
+This attempts to automatically copy the UF2 file to the RP2040:
+
+```bash
+cargo make uf2-flash --release
+```
+
+Note: The RP2040 must already be in bootloader mode.
+
+### Method C: Using `cargo run` (Automatic)
+
+1. **Enter bootloader mode** (same as above)
 
 2. **Build and upload:**
    ```bash
@@ -77,25 +115,15 @@ DEFMT_LOG = "info"
    - Copy the UF2 file to the RP2040
    - Reset the device
 
-### Method B: Manual UF2 Upload
+### Method D: Manual UF2 Upload
 
-1. **Build the UF2 file:**
+1. **Build the UF2 file manually:**
    ```bash
    cargo build --release
    elf2uf2-rs target/thumbv6m-none-eabi/release/hdmi-hpd-control target/hdmi-hpd-control.uf2
    ```
 
-2. **Enter bootloader mode** (same as Method A)
-
-3. **Copy the UF2 file:**
-   ```bash
-   # macOS/Linux
-   cp target/hdmi-hpd-control.uf2 /Volumes/RPI-RP2/
-
-   # Or just drag and drop the file to the RPI-RP2 drive
-   ```
-
-4. The device will automatically reset and run your firmware
+2. **Enter bootloader mode** and copy the file (same as Method A)
 
 ## Step 3: Viewing Logs via USB
 
@@ -201,10 +229,16 @@ newgrp dialout
 ## Quick Reference
 
 ```bash
+# Build UF2 file (recommended method)
+cargo make uf2 --release
+
+# Build and auto-flash (if RP2040 already in bootloader mode)
+cargo make uf2-flash --release
+
 # Build only
 cargo build --release
 
-# Build and upload (bootloader mode required)
+# Build and upload via elf2uf2-rs runner (bootloader mode required)
 cargo run --release
 
 # Create UF2 manually
@@ -212,6 +246,12 @@ elf2uf2-rs target/thumbv6m-none-eabi/release/hdmi-hpd-control target/firmware.uf
 
 # View logs (after enabling USB logging)
 screen /dev/tty.usbmodem* 115200
+
+# Other useful commands
+cargo make check      # Check for errors
+cargo make clippy     # Run lints
+cargo make size       # Show binary size
+cargo make clean      # Clean build artifacts
 ```
 
 ## Additional Resources

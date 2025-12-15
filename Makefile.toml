@@ -1,0 +1,85 @@
+# Makefile.toml for RP2040 UF2 generation
+# Usage: cargo make uf2 --release
+
+[env]
+CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+PROJECT_NAME = "hdmi-hpd-control"
+
+[tasks.uf2]
+description = "Build and convert to UF2 format for RP2040"
+dependencies = ["build"]
+script_runner = "@shell"
+script = [
+    '''
+    # Determine build profile
+    if echo "${@}" | grep -q "release"; then
+        PROFILE="release"
+    else
+        PROFILE="debug"
+    fi
+
+    # Convert ELF to UF2
+    elf2uf2-rs target/thumbv6m-none-eabi/${PROFILE}/hdmi-hpd-control target/hdmi-hpd-control.uf2
+
+    echo ""
+    echo "✓ UF2 file created: target/hdmi-hpd-control.uf2"
+    echo ""
+    echo "To flash:"
+    echo "1. Hold BOOTSEL button on RP2040"
+    echo "2. Connect USB cable"
+    echo "3. Copy target/hdmi-hpd-control.uf2 to RPI-RP2 drive"
+    echo ""
+    '''
+]
+
+[tasks.build]
+description = "Build the project"
+command = "cargo"
+args = ["build", "@@split(CARGO_MAKE_TASK_ARGS, )"]
+
+[tasks.uf2-flash]
+description = "Build UF2 and attempt to copy to RP2040 (macOS/Linux)"
+dependencies = ["uf2"]
+script_runner = "@shell"
+script = [
+    '''
+    if [ -d "/Volumes/RPI-RP2" ]; then
+        cp target/${PROJECT_NAME}.uf2 /Volumes/RPI-RP2/
+        echo "✓ Flashed to /Volumes/RPI-RP2"
+    elif [ -d "/media/${USER}/RPI-RP2" ]; then
+        cp target/${PROJECT_NAME}.uf2 /media/${USER}/RPI-RP2/
+        echo "✓ Flashed to /media/${USER}/RPI-RP2"
+    else
+        echo "⚠ RPI-RP2 drive not found. Please enter BOOTSEL mode."
+        exit 1
+    fi
+    '''
+]
+
+[tasks.clean]
+description = "Clean build artifacts"
+command = "cargo"
+args = ["clean"]
+
+[tasks.check]
+description = "Check the project for errors"
+command = "cargo"
+args = ["check"]
+
+[tasks.clippy]
+description = "Run clippy lints"
+command = "cargo"
+args = ["clippy", "--", "-D", "warnings"]
+
+[tasks.size]
+description = "Show binary size information"
+dependencies = ["build"]
+script_runner = "@shell"
+script = [
+    "arm-none-eabi-size target/thumbv6m-none-eabi/${CARGO_MAKE_PROFILE}/hdmi-hpd-control || cargo size --bin hdmi-hpd-control || echo 'Install cargo-binutils for size info: cargo install cargo-binutils'"
+]
+
+[tasks.default]
+description = "Default task - show available tasks"
+command = "cargo"
+args = ["make", "--list-all-steps"]
