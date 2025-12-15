@@ -15,9 +15,9 @@ Based on the schematic, the following GPIO pins are used:
 
 | Signal     | GPIO | Description                              |
 |------------|------|------------------------------------------|
-| HPD_CNTRL  | 20   | Controls HPD state via MOSFET circuit    |
+| HPD_CNTRL  | 19   | Controls HPD state via MOSFET circuit    |
 | GEN_BTN    | 11   | General purpose button (active low)      |
-| GPIO_LED   | 19   | Status LED indicator                     |
+| GPIO_LED   | 18   | Status LED indicator                     |
 
 ### Circuit Notes
 

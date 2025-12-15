@@ -15,7 +15,6 @@ use hpd::{HpdCommand, HpdController};
 
 /// GPIO pin assignments based on schematic
 mod pins {
-    use embassy_rp::gpio::Pin;
     
     /// HPD_CNTRL - Connected to GPIO20 (directly controls hot plug detection)
     pub const HPD_CNTRL: u8 = 19;
@@ -107,7 +106,7 @@ async fn main(spawner: Spawner) {
 /// - Short press (< 500ms): Toggle HPD state
 /// - Long press (>= 500ms): Trigger HPD pulse for EDID re-read
 #[embassy_executor::task]
-async fn button_handler(button: Input<'static>) {
+async fn button_handler(mut button: Input<'static>) {
     const LONG_PRESS_THRESHOLD: Duration = Duration::from_millis(500);
     const DEBOUNCE: Duration = Duration::from_millis(50);
     
